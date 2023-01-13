@@ -1,0 +1,28 @@
+version: '3'
+
+services:
+  fastapi:
+    build: ./src
+    volumes:
+      - ./src:/src
+    entrypoint: ./entrypoint.sh
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+
+  postgres:
+    container_name: pgdb
+    image: postgres
+    env_file:
+      - ./src/.env
+
+  pgadmin:
+    container_name: pgadmin4_container
+    image: dpage/pgadmin4
+    links:
+      - postgres:db
+    env_file:
+      - ./src/.env
+    ports:
+      - "5050:80"
