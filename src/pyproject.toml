@@ -8,6 +8,11 @@ authors = ["mitrandir-pl <leshkopavel@gmail.com>"]
 python = "^3.10"
 fastapi = "^0.89.1"
 uvicorn = "^0.20.0"
+sqlmodel = "^0.0.8"
+python-dotenv = "^0.21.0"
+psycopg2-binary = "^2.9.5"
+pydantic = {extras = ["email"], version = "^1.10.4"}
+PyJWT = "^2.6.0"
 
 [tool.poetry.dev-dependencies]
 

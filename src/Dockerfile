@@ -11,4 +11,3 @@ RUN chmod +x entrypoint.sh
 RUN python -m pip install --upgrade pip
 RUN pip install poetry
 RUN poetry install
-#RUN poetry run uvicorn fastapi_test_task.src.main:app --reload
