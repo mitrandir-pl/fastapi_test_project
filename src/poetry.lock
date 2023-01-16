@@ -109,6 +109,20 @@ optional = false
 python-versions = ">=3.5"
 
 [[package]]
+name = "passlib"
+version = "1.7.4"
+description = "comprehensive password hashing framework supporting over 30 schemes"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.extras]
+argon2 = ["argon2-cffi (>=18.2.0)"]
+bcrypt = ["bcrypt (>=3.1.0)"]
+build_docs = ["sphinx (>=1.6)", "sphinxcontrib-fulltoc (>=1.2.0)", "cloud-sptheme (>=1.10.1)"]
+totp = ["cryptography"]
+
+[[package]]
 name = "psycopg2-binary"
 version = "2.9.5"
 description = "psycopg2 - Python-PostgreSQL Database Adapter"
@@ -261,7 +275,7 @@ standard = ["colorama (>=0.4)", "httptools (>=0.5.0)", "python-dotenv (>=0.13)",
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "30826c8703fd1b74e230d71c78ef73a3ef06e1a8745c50a04a768af06681966b"
+content-hash = "141aa8dd17e4846a83175386b7436b28a3ef5ad1871a82da1f18e84cb4fa8a91"
 
 [metadata.files]
 anyio = [
@@ -357,6 +371,10 @@ h11 = [
 idna = [
     {file = "idna-3.4-py3-none-any.whl", hash = "sha256:90b77e79eaa3eba6de819a0c442c0b4ceefc341a7a2ab77d7562bf49f425c5c2"},
     {file = "idna-3.4.tar.gz", hash = "sha256:814f528e8dead7d329833b91c5faa87d60bf71824cd12a7530b5526063d02cb4"},
+]
+passlib = [
+    {file = "passlib-1.7.4-py2.py3-none-any.whl", hash = "sha256:aa6bca462b8d8bda89c70b382f0c298a20b5560af6cbfa2dce410c0a2fb669f1"},
+    {file = "passlib-1.7.4.tar.gz", hash = "sha256:defd50f72b65c5402ab2c573830a6978e5f202ad0d984793c8dde2c4152ebe04"},
 ]
 psycopg2-binary = [
     {file = "psycopg2-binary-2.9.5.tar.gz", hash = "sha256:33e632d0885b95a8b97165899006c40e9ecdc634a529dca7b991eb7de4ece41c"},
