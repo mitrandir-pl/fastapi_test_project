@@ -5,7 +5,6 @@ from passlib.context import CryptContext
 import jwt
 from fastapi import HTTPException
 
-from tables.user import User
 from config.error_messages import (
     TOKEN_EXPIRED_MESSAGE,
     INVALID_TOKEN_MESSAGE
@@ -21,18 +20,18 @@ class Auth:
     secret = os.environ.get('JWT_SECRET_KEY')
     algorithm = os.environ.get('JWT_ALGORITHM')
 
-    def encode_password(self, password):
+    def encode_password(self, password: str) -> str:
         """Encoding user's password."""
         return self.hasher.hash(password)
 
-    def verify_password(self, password, encoded_password):
+    def verify_password(self, password: str, encoded_password: str) -> bool:
         """Verifies user's password."""
         return self.hasher.verify(password, encoded_password)
 
-    def generate_access_token(self, user: User):
+    def generate_access_token(self, user_id: int) -> str:
         """Generates access token by user's id"""
         access_token_payload = {
-            'user_id': user.id,
+            'user_id': user_id,
             'exp': datetime.datetime.utcnow() + datetime.timedelta(days=0, minutes=5),
             'iat': datetime.datetime.utcnow(),
         }
@@ -41,10 +40,10 @@ class Auth:
                                   algorithm=self.algorithm)
         return access_token
 
-    def generate_refresh_token(self, user: User):
+    def generate_refresh_token(self, user_id: int) -> str:
         """Generates refresh token by user's id"""
         refresh_token_payload = {
-            'user_id': user.id,
+            'user_id': user_id,
             'exp': datetime.datetime.utcnow() + datetime.timedelta(days=7),
             'iat': datetime.datetime.utcnow()
         }
@@ -53,7 +52,7 @@ class Auth:
         )
         return refresh_token
 
-    def decode_token(self, token):
+    def decode_token(self, token: str) -> dict[str: str]:
         """Decoding access token and returns payload"""
         try:
             payload = jwt.decode(token, self.secret, algorithms=['HS256'])
@@ -62,6 +61,3 @@ class Auth:
         except jwt.InvalidTokenError:
             raise HTTPException(status_code=401, detail=INVALID_TOKEN_MESSAGE)
         return payload
-
-    def validate_refresh_token(self, refresh_token):
-        pass

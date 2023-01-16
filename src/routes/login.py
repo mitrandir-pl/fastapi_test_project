@@ -1,66 +1,48 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, EmailStr, Field
-from sqlmodel import Session, select
-from sqlalchemy.exc import NoResultFound
+from pydantic import BaseModel
 
-from tables.user import User
+from config.error_messages import WRONG_PASSWORD_MESSAGE
+from services.login_handler import LoginHandler, UserLoginModel
 from authentication.auth import Auth
-from config.db_settings import engine
-from config.error_messages import (
-    WRONG_PASSWORD_MESSAGE,
-    NO_USER_WITH_EMAIL_MESSAGE,
-)
 
 
 router = APIRouter()
 
 
-class UserLoginModel(BaseModel):
-    email: EmailStr
-    password: str = Field(min_length=8)
+class LoginResponseModel(BaseModel):
+    refresh_token: str
+    access_token: str
 
 
-class LoginHandler:
+class RefreshTokenModel(BaseModel):
+    refresh_token: str
 
-    def __init__(self, email, password):
-        self.email = email
-        self.password = password
-        self.user = None
-        self.auth_handler = Auth()
 
-    def user_exists(self):
-        with Session(engine) as session:
-            statement = select(User).where(User.email == self.email)
-            try:
-                self.user = session.exec(statement).one()
-            except NoResultFound:
-                raise HTTPException(status_code=401,
-                                    detail=NO_USER_WITH_EMAIL_MESSAGE)
-            return self.user
-
-    def check_password(self):
-        return self.auth_handler.verify_password(
-            self.password, self.user.password
-        )
-
-    def get_tokens(self):
-        access_token = self.auth_handler.generate_access_token(self.user)
-        refresh_token = self.auth_handler.generate_refresh_token(self.user)
-        return {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-        }
+class AccessTokenModel(BaseModel):
+    access_token: str
 
 
 @router.post("/login")
-async def login(user_credentials: UserLoginModel):
+async def login(user_credentials: UserLoginModel) -> LoginResponseModel:
     login_handler = LoginHandler(
         user_credentials.email,
         user_credentials.password,
     )
     if login_handler.user_exists():
         if login_handler.check_password():
-            return login_handler.get_tokens()
+            tokens = login_handler.get_tokens()
+            return LoginResponseModel(
+                refresh_token=tokens["refresh_token"],
+                access_token=tokens["access_token"],
+            )
         else:
             raise HTTPException(status_code=401,
                                 detail=WRONG_PASSWORD_MESSAGE)
+
+
+@router.get("/refresh_token")
+async def refresh_token(token: RefreshTokenModel) -> AccessTokenModel:
+    auth_handler = Auth()
+    payload = auth_handler.decode_token(token.refresh_token)
+    access_token = auth_handler.generate_access_token(payload['user_id'])
+    return AccessTokenModel(access_token=access_token)
