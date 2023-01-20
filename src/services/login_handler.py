@@ -5,7 +5,6 @@ from sqlalchemy.exc import NoResultFound
 
 from tables.user import User
 from authentication.auth import Auth
-from config.db_settings import engine
 from config.error_messages import NO_USER_WITH_EMAIL_MESSAGE
 
 
@@ -22,16 +21,15 @@ class LoginHandler:
         self.user = None
         self.auth_handler = Auth()
 
-    def user_exists(self) -> User:
+    def user_exists(self, session: Session) -> User:
         """Method checks if such user already exists"""
-        with Session(engine) as session:
-            statement = select(User).where(User.email == self.email)
-            try:
-                self.user = session.exec(statement).one()
-            except NoResultFound:
-                raise HTTPException(status_code=401,
-                                    detail=NO_USER_WITH_EMAIL_MESSAGE)
-            return self.user
+        statement = select(User).where(User.email == self.email)
+        try:
+            self.user = session.exec(statement).one()
+        except NoResultFound:
+            raise HTTPException(status_code=401,
+                                detail=NO_USER_WITH_EMAIL_MESSAGE)
+        return self.user
 
     def check_password(self) -> bool:
         """Method checks the password"""

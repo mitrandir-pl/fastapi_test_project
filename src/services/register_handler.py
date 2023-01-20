@@ -43,11 +43,9 @@ class RegisterHandler:
         else:
             return True
 
-    def user_not_exists(self) -> bool:
+    def user_not_exists(self, session: Session) -> bool:
         """Method checks if user with such email and username don't exists"""
-        with Session(engine) as session:
-            return self.check_email(session) and \
-                   self.check_username(session)
+        return self.check_email(session) and self.check_username(session)
 
     def create_user(self) -> User:
         """Method creates a new user"""

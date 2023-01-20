@@ -11,6 +11,7 @@ from config.error_messages import (
     STRANGER_POST_DELETE_MESSAGE,
     LIKE_SET_MESSAGE,
     LIKE_REMOVED_MESSAGE,
+    SELF_LIKE_MESSAGE,
 )
 
 
@@ -24,65 +25,61 @@ class PostsHandler:
     def __init__(self):
         self.auth_handler = Auth()
 
-    def get_posts_list(self) -> list[Post]:
+    def get_posts_list(self, session: Session) -> list[Post]:
         """Method returns list of all posts"""
         statement = select(Post)
-        with Session(engine) as session:
-            return session.exec(statement).all()
+        return session.exec(statement).all()
 
-    def get_post_by_id(self, post_id: int) -> Post:
+    def get_post_by_id(self, post_id: int, session: Session) -> Post:
         """Method returns post by current id"""
-        with Session(engine) as session:
-            return session.get(Post, post_id)
+        return session.get(Post, post_id)
 
-    def create_post(self, post: PostModel, token: str) -> None:
+    def create_post(self, post: PostModel, token: str, session: Session) -> None:
         """Method creates a post"""
         payload = self.auth_handler.decode_token(token)
-        with Session(engine) as session:
-            user = session.get(User, payload["user_id"])
-            created_post = Post(
-                title=post.title,
-                description=post.description,
-                author_id=user.id,
-                author=user,
-            )
-            session.add(created_post)
-            session.commit()
+        user = session.get(User, payload["user_id"])
+        created_post = Post(
+            title=post.title,
+            description=post.description,
+            author_id=user.id,
+            author=user,
+        )
+        session.add(created_post)
+        session.commit()
 
-    def update_post(self, updated_post: PostModel, post_id: int, token: str) -> None:
+    def update_post(self, updated_post: PostModel,
+                    post_id: int, token: str, session: Session) -> None:
         """Method updates a post"""
         payload = self.auth_handler.decode_token(token)
-        with Session(engine) as session:
-            user = session.get(User, payload["user_id"])
-            post = session.get(Post, post_id)
-            if post.author == user:
-                for key, value in updated_post.dict():
-                    setattr(post, key, value)
-                session.add(post)
-                session.commit()
-            else:
-                raise HTTPException(status_code=400,
-                                    detail=STRANGER_POST_UPDATE_MESSAGE)
+        user = session.get(User, payload["user_id"])
+        post = session.get(Post, post_id)
+        if post.author == user:
+            for key, value in updated_post.dict():
+                setattr(post, key, value)
+            session.add(post)
+            session.commit()
+        else:
+            raise HTTPException(status_code=400,
+                                detail=STRANGER_POST_UPDATE_MESSAGE)
 
-    def delete_post(self, post_id: int, token: str) -> None:
+    def delete_post(self, post_id: int, token: str, session: Session) -> None:
         """Method deletes a post"""
         payload = self.auth_handler.decode_token(token)
-        with Session(engine) as session:
-            user = session.get(User, payload["user_id"])
-            post = session.get(Post, post_id)
-            if post.author == user:
-                session.delete(post)
-                session.commit()
-            else:
-                raise HTTPException(status_code=400,
-                                    detail=STRANGER_POST_DELETE_MESSAGE)
+        user = session.get(User, payload["user_id"])
+        post = session.get(Post, post_id)
+        if post.author == user:
+            session.delete(post)
+            session.commit()
+        else:
+            raise HTTPException(status_code=400,
+                                detail=STRANGER_POST_DELETE_MESSAGE)
 
-    def set_like(self, post_id: int, token: str) -> str:
+    def set_like(self, post_id: int, token: str, session: Session) -> str:
         """Method sets like. If it's already set, method removes it"""
         payload = self.auth_handler.decode_token(token)
-        with Session(engine) as session:
-            user = session.get(User, payload["user_id"])
-            post = session.get(Post, post_id)
+        user = session.get(User, payload["user_id"])
+        post = session.get(Post, post_id)
+        if post.author.id != user.id:
             if user not in post.liked_users:
                 post.liked_users.append(user)
                 session.add(post)
@@ -93,3 +90,8 @@ class PostsHandler:
                 session.add(post)
                 session.commit()
                 return LIKE_REMOVED_MESSAGE
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=SELF_LIKE_MESSAGE,
+            )

@@ -1,4 +1,4 @@
-version: '3'
+version: '3.6'
 
 services:
   fastapi:
@@ -16,6 +16,11 @@ services:
     image: postgres
     env_file:
       - ./src/.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./docker_postgres_init.sql:/docker-entrypoint-initdb.d/docker_postgres_init.sql
+
 
   pgadmin:
     container_name: pgadmin4_container

@@ -1,7 +1,6 @@
 from sqlmodel import Session, select
 from pydantic import BaseModel, EmailStr
 
-from config.db_settings import engine
 from tables.user import User
 from tables.post import Post
 
@@ -18,26 +17,24 @@ class UserOutModel(UserListOutModel):
 
 class UsersHandler:
 
-    def get_users_list(self) -> list[UserListOutModel]:
+    def get_users_list(self, session: Session) -> list[UserListOutModel]:
         """Method returns list of users"""
         statement = select(User)
-        with Session(engine) as session:
-            user_list = list()
-            for user in session.exec(statement).all():
-                user_list.append(UserListOutModel(
-                    id_=user.id,
-                    username=user.username,
-                    email=user.email,
-                ))
-            return user_list
-
-    def get_user_by_id(self, user_id: int) -> UserOutModel:
-        """Method returns user by id"""
-        with Session(engine) as session:
-            user = session.get(User, user_id)
-            return UserOutModel(
+        user_list = list()
+        for user in session.exec(statement).all():
+            user_list.append(UserListOutModel(
                 id_=user.id,
                 username=user.username,
                 email=user.email,
-                posts=user.posts,
-            )
+            ))
+        return user_list
+
+    def get_user_by_id(self, user_id: int, session: Session) -> UserOutModel:
+        """Method returns user by id"""
+        user = session.get(User, user_id)
+        return UserOutModel(
+            id_=user.id,
+            username=user.username,
+            email=user.email,
+            posts=user.posts,
+        )
